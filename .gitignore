@@ -1,0 +1,6 @@
+minio-data/
+hadoop-libs/*.jar
+**/.ipynb_checkpoints/
+**/tmp/
+postgres/
+.ipynb_checkpoints/

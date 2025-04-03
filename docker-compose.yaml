@@ -1,0 +1,179 @@
+services:
+  minio:
+    image: 'minio/minio:latest'
+    container_name: minio
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - ./minio/minio-data:/data
+    environment:
+      MINIO_ROOT_USER: accesskey
+      MINIO_ROOT_PASSWORD: secretkey
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: |
+        /bin/sh -c "
+        # Verifica se a API está respondendo
+        curl -f http://localhost:9000/minio/health/live || exit 1
+        
+        # Instala mc se necessário
+        if ! command -v mc &> /dev/null; then
+          wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/bin/mc &&
+          chmod +x /usr/bin/mc
+        fi
+        
+        # Configura alias e verifica/cria o bucket
+        mc alias set myminio http://localhost:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD} >/dev/null &&
+        (mc ls myminio/wba >/dev/null || (mc mb myminio/wba && mc anonymous set public myminio/wba))
+        "
+      interval: 5s
+      timeout: 10s
+      retries: 20
+    networks:
+      - wba-network
+
+  postgres:
+    image: postgres:10-alpine
+    container_name: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: metastore_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d metastore_db"]
+      interval: 1s
+      timeout: 10s
+      retries: 10
+    volumes:
+      - ./sqldb/postgres:/var/lib/postgresql/data
+    networks:
+      - wba-network
+
+  hive-metastore:
+    build: ./hive
+    container_name: hive-metastore
+    ports:
+      - 9083:9083
+    environment:
+      SERVICE_NAME: metastore
+      DB_DRIVER: postgres
+      HIVE_CUSTOM_CONF_DIR: /opt/hive/conf
+    volumes:
+      - ./hive/hive-config:/opt/hive/conf
+      - ./hive/hadoop-libs/hadoop-aws-3.1.0.jar:/opt/hive/lib/hadoop-aws-3.1.0.jar
+      - ./hive/hadoop-libs/aws-java-sdk-bundle-1.11.271.jar:/opt/hive/lib/aws-java-sdk-bundle-1.11.271.jar
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - wba-network
+
+  hive-server:
+    hostname: hive-server
+    container_name: hive-server
+    image: apache/hive:3.1.3
+    ports:
+      - 10000:10000
+      - 10002:10002
+    environment:
+      SERVICE_NAME: hiveserver2
+      IS_RESUME: "true"
+      HIVE_CUSTOM_CONF_DIR: /opt/hive/conf
+    volumes:
+      - ./hive/hive-config:/opt/hive/conf
+      - ./hive/hadoop-libs/hadoop-aws-3.1.0.jar:/opt/hive/lib/hadoop-aws-3.1.0.jar
+      - ./hive/hadoop-libs/aws-java-sdk-bundle-1.11.271.jar:/opt/hive/lib/aws-java-sdk-bundle-1.11.271.jar
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - wba-network
+
+  spark-master:
+    image: bitnami/spark:3.5.0
+    container_name: spark-master
+    command: ["/opt/bitnami/scripts/spark/run.sh", "bin/spark-class org.apache.spark.deploy.master.Master"]
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    volumes:
+      - ./spark/spark-config/hive-site.xml:/opt/bitnami/spark/conf/hive-site.xml
+      - ./spark/spark-config/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+    networks:
+      - wba-network
+
+  spark-worker1:
+    image: bitnami/spark:3.5.0
+    container_name: spark-worker1
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    depends_on:
+      - spark-master
+    environment:
+      SPARK_MODE: worker
+      SPARK_WORKER_CORES: 2
+      SPARK_WORKER_MEMORY: 5g
+      SPARK_MASTER_URL: spark://spark-master:7077
+    volumes:
+      - ./spark/spark-config/hive-site.xml:/opt/bitnami/spark/conf/hive-site.xml
+      - ./spark/spark-config/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+    networks:
+      - wba-network
+
+  spark-worker2:
+    image: bitnami/spark:3.5.0
+    container_name: spark-worker2
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    depends_on:
+      - spark-master
+    environment:
+      SPARK_MODE: worker
+      SPARK_WORKER_CORES: 2
+      SPARK_WORKER_MEMORY: 5g
+      SPARK_MASTER_URL: spark://spark-master:7077
+    volumes:
+      - ./spark/spark-config/hive-site.xml:/opt/bitnami/spark/conf/hive-site.xml
+      - ./spark/spark-config/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+    networks:
+      - wba-network
+  
+  spark-worker3:
+    image: bitnami/spark:3.5.0
+    container_name: spark-worker3
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    depends_on:
+      - spark-master
+    environment:
+      SPARK_MODE: worker
+      SPARK_WORKER_CORES: 2
+      SPARK_WORKER_MEMORY: 5g
+      SPARK_MASTER_URL: spark://spark-master:7077
+    volumes:
+      - ./spark/spark-config/hive-site.xml:/opt/bitnami/spark/conf/hive-site.xml
+      - ./spark/spark-config/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+    networks:
+      - wba-network
+
+  jupyterlab:
+    build: ./jupyter
+    container_name: jupyterlab
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./jupyter/notebooks:/home/jovyan/work
+    environment:
+      - SPARK_OPTS=--master spark://spark-master:7077
+    depends_on:
+      - spark-master
+    networks:
+      - wba-network
+      
+networks:
+  wba-network:
+    driver: bridge
