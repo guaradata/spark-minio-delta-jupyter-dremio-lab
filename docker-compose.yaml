@@ -97,7 +97,7 @@ services:
       - wba-network
 
   spark-master:
-    image: bitnami/spark:3.5.0
+    image: bitnami/spark:3.5.1
     container_name: spark-master
     command: ["/opt/bitnami/scripts/spark/run.sh", "bin/spark-class org.apache.spark.deploy.master.Master"]
     ports:
@@ -110,7 +110,7 @@ services:
       - wba-network
 
   spark-worker1:
-    image: bitnami/spark:3.5.0
+    image: bitnami/spark:3.5.1
     container_name: spark-worker1
     command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     depends_on:
@@ -127,7 +127,7 @@ services:
       - wba-network
 
   spark-worker2:
-    image: bitnami/spark:3.5.0
+    image: bitnami/spark:3.5.1
     container_name: spark-worker2
     command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     depends_on:
@@ -144,7 +144,7 @@ services:
       - wba-network
   
   spark-worker3:
-    image: bitnami/spark:3.5.0
+    image: bitnami/spark:3.5.1
     container_name: spark-worker3
     command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     depends_on:
@@ -157,6 +157,21 @@ services:
     volumes:
       - ./spark/spark-config/hive-site.xml:/opt/bitnami/spark/conf/hive-site.xml
       - ./spark/spark-config/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+    networks:
+      - wba-network
+
+  kyuubi:
+    hostname: kyuubi
+    container_name: kyuubi
+    image: apache/kyuubi:1.9.0-spark
+    volumes:
+      - ./kyuubi-config/kyuubi-defaults.conf:/opt/kyuubi/conf/kyuubi-defaults.conf
+    ports:
+      - "10009:10009"
+      - "10099:10099"
+    depends_on:
+      - spark-master
+      - hive-metastore
     networks:
       - wba-network
 

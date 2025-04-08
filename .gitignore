@@ -3,4 +3,6 @@ hadoop-libs/*.jar
 **/.ipynb_checkpoints/
 **/tmp/
 postgres/
+sqldb/
 .ipynb_checkpoints/
+*/*.tgz
