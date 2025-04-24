@@ -165,7 +165,7 @@ services:
     container_name: kyuubi
     image: apache/kyuubi:1.9.0-spark
     volumes:
-      - ./kyuubi-config/kyuubi-defaults.conf:/opt/kyuubi/conf/kyuubi-defaults.conf
+      - ./kyuubi/kyuubi-defaults.conf:/opt/kyuubi/conf/kyuubi-defaults.conf
     ports:
       - "10009:10009"
       - "10099:10099"
