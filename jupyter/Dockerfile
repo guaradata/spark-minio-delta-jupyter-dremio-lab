@@ -18,6 +18,13 @@ RUN tar -xzf /tmp/spark-3.5.1-bin-custom-build.tgz -C /usr/local/ && \
 ENV SPARK_HOME=/usr/local/spark
 ENV PATH=$SPARK_HOME/bin:$PATH
 
+COPY ./utils/spark_utils/ /tmp/spark_utils/
+
+COPY ./utils/setup.py /tmp/
+
+# Instala o pacote com pip
+RUN pip install /tmp/
+
 # Volta para o usuário padrão do Jupyter
 USER $NB_UID
 

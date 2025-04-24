@@ -118,7 +118,7 @@ services:
     environment:
       SPARK_MODE: worker
       SPARK_WORKER_CORES: 2
-      SPARK_WORKER_MEMORY: 5g
+      SPARK_WORKER_MEMORY: 1g
       SPARK_MASTER_URL: spark://spark-master:7077
     volumes:
       - ./spark/spark-config/hive-site.xml:/opt/bitnami/spark/conf/hive-site.xml
@@ -135,7 +135,7 @@ services:
     environment:
       SPARK_MODE: worker
       SPARK_WORKER_CORES: 2
-      SPARK_WORKER_MEMORY: 5g
+      SPARK_WORKER_MEMORY: 1g
       SPARK_MASTER_URL: spark://spark-master:7077
     volumes:
       - ./spark/spark-config/hive-site.xml:/opt/bitnami/spark/conf/hive-site.xml
@@ -152,7 +152,7 @@ services:
     environment:
       SPARK_MODE: worker
       SPARK_WORKER_CORES: 2
-      SPARK_WORKER_MEMORY: 5g
+      SPARK_WORKER_MEMORY: 1g
       SPARK_MASTER_URL: spark://spark-master:7077
     volumes:
       - ./spark/spark-config/hive-site.xml:/opt/bitnami/spark/conf/hive-site.xml
