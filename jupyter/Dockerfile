@@ -20,6 +20,12 @@ ENV PATH=$SPARK_HOME/bin:$PATH
 
 COPY ./utils/ /tmp/
 
+# Copia os arquivos necessários
+COPY requirements.txt /tmp/requirements.txt
+
+# Instala todas as dependências de uma vez
+RUN pip install -r /tmp/requirements.txt
+
 # Instala o pacote com pip
 RUN pip install /tmp/spark_fs_lib/
 RUN pip install /tmp/spark_init_lib/

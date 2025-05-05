@@ -1,0 +1,9 @@
+jupyter_scheduler==2.10.0
+jupyterlab-git==0.51.1
+jupyter-lsp==2.2.5
+python-lsp-server==1.12.2
+jupyterlab-code-formatter==3.0.2
+jupyterlab-spreadsheet-editor==0.7.2
+jupyterlab-theme-solarized-dark==3.0.1
+ipywidgets==8.1.7
+nbdime==4.0.2
