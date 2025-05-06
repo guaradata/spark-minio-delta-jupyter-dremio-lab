@@ -20,6 +20,8 @@ ENV PATH=$SPARK_HOME/bin:$PATH
 
 COPY ./utils/ /tmp/
 
+RUN pip install --upgrade jupyterlab
+
 # Copia os arquivos necessários
 COPY requirements.txt /tmp/requirements.txt
 

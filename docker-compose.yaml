@@ -198,7 +198,17 @@ services:
       - hive-metastore
     networks:
       - wba-network
-      
+  
+  portainer:
+    image: portainer/portainer-ce
+    container_name: portainer
+    ports:
+      - "9090:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - wba-network
+
 networks:
   wba-network:
     driver: bridge
