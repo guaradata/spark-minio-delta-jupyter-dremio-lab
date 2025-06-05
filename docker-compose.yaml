@@ -201,7 +201,7 @@ services:
   
   portainer:
     image: portainer/portainer-ce
-    container_name: portainer
+    container_name: portainer-mds
     ports:
       - "9090:9000"
     volumes:
